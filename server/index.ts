@@ -13,103 +13,175 @@ const handle = app.getRequestHandler();
 app.prepare().then(() => {
   const expressApp = express();
   const server = http.createServer(expressApp);
-  const io = new Server(server, { cors: { origin: "*" } });
+
+  const io = new Server(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"],
+    },
+  });
 
   io.on("connection", (socket) => {
     socket.on("create-room", ({ roomId, host }) => {
-      const room = updateRoom(roomId, () => ({
-        players: [{ id: socket.id, name: host, score: 0 }],
+      if (!roomId?.trim() || !host?.trim()) return;
+
+      const cleanRoomId = roomId.trim().toUpperCase();
+      const cleanHost = host.trim();
+
+      const room = updateRoom(cleanRoomId, () => ({
+        players: [{ id: socket.id, name: cleanHost, score: 0 }],
         questions: [],
         currentQuestion: 0,
         messages: [],
       }));
-      socket.join(roomId);
-      io.to(roomId).emit("room-update", room);
+
+      socket.join(cleanRoomId);
+      io.to(cleanRoomId).emit("room-update", room);
     });
 
     socket.on("join-room", ({ roomId, name }) => {
-      const room = updateRoom(roomId, (existing) => {
+      if (!roomId?.trim() || !name?.trim()) return;
+
+      const cleanRoomId = roomId.trim().toUpperCase();
+      const cleanName = name.trim();
+
+      const room = updateRoom(cleanRoomId, (existing) => {
         if (!existing) return undefined;
+
         if (!existing.players.some((player) => player.id === socket.id)) {
-          existing.players.push({ id: socket.id, name, score: 0 });
+          existing.players.push({
+            id: socket.id,
+            name: cleanName,
+            score: 0,
+          });
         }
+
         return existing;
       });
+
       if (!room) return;
-      socket.join(roomId);
-      io.to(roomId).emit("room-update", room);
+
+      socket.join(cleanRoomId);
+      io.to(cleanRoomId).emit("room-update", room);
     });
 
     socket.on("start-quiz", ({ roomId, questions }) => {
-      const room = updateRoom(roomId, (existing) => {
+      if (!roomId?.trim() || !Array.isArray(questions)) return;
+
+      const cleanRoomId = roomId.trim().toUpperCase();
+
+      const room = updateRoom(cleanRoomId, (existing) => {
         if (!existing) return undefined;
         existing.questions = questions;
         existing.currentQuestion = 0;
         return existing;
       });
+
       if (!room) return;
-      io.to(roomId).emit("quiz-started", { questions, currentQuestion: 0 });
-      io.to(roomId).emit("room-update", room);
+
+      io.to(cleanRoomId).emit("quiz-started", {
+        questions,
+        currentQuestion: 0,
+      });
+      io.to(cleanRoomId).emit("room-update", room);
     });
 
     socket.on("submit-answer", ({ roomId, isCorrect }) => {
-      const room = updateRoom(roomId, (existing) => {
+      if (!roomId?.trim()) return;
+
+      const cleanRoomId = roomId.trim().toUpperCase();
+
+      const room = updateRoom(cleanRoomId, (existing) => {
         if (!existing) return undefined;
+
         const player = existing.players.find((p) => p.id === socket.id);
-        if (player && isCorrect) player.score += 1;
+        if (player && isCorrect) {
+          player.score += 1;
+        }
+
         return existing;
       });
+
       if (!room) return;
-      io.to(roomId).emit("score-update", room.players);
-      io.to(roomId).emit("room-update", room);
+
+      io.to(cleanRoomId).emit("score-update", room.players);
+      io.to(cleanRoomId).emit("room-update", room);
     });
 
     socket.on("next-question", ({ roomId }) => {
-      const room = updateRoom(roomId, (existing) => {
+      if (!roomId?.trim()) return;
+
+      const cleanRoomId = roomId.trim().toUpperCase();
+
+      const room = updateRoom(cleanRoomId, (existing) => {
         if (!existing) return undefined;
         existing.currentQuestion += 1;
         return existing;
       });
+
       if (!room) return;
-      io.to(roomId).emit("question-changed", room.currentQuestion);
-      io.to(roomId).emit("room-update", room);
+
+      io.to(cleanRoomId).emit("question-changed", room.currentQuestion);
+      io.to(cleanRoomId).emit("room-update", room);
     });
 
     socket.on("send-message", ({ roomId, text, name }) => {
-      const room = updateRoom(roomId, (existing) => {
+      if (!roomId?.trim() || !text?.trim() || !name?.trim()) return;
+
+      const cleanRoomId = roomId.trim().toUpperCase();
+      const cleanText = text.trim();
+      const cleanName = name.trim();
+
+      const room = updateRoom(cleanRoomId, (existing) => {
         if (!existing) return undefined;
+
         existing.messages.push({
           id: randomUUID(),
           userId: socket.id,
-          name,
-          text,
+          name: cleanName,
+          text: cleanText,
           createdAt: Date.now(),
         });
+
         return existing;
       });
+
       if (!room) return;
-      io.to(roomId).emit("chat-update", room.messages);
-      io.to(roomId).emit("room-update", room);
+
+      io.to(cleanRoomId).emit("chat-update", room.messages);
+      io.to(cleanRoomId).emit("room-update", room);
     });
 
     socket.on("disconnecting", () => {
-      const rooms = readRooms();
-      for (const roomId of socket.rooms) {
-        if (roomId === socket.id) continue;
-        const room = updateRoom(roomId, (existing) => {
+      for (const joinedRoomId of socket.rooms) {
+        if (joinedRoomId === socket.id) continue;
+
+        const room = updateRoom(joinedRoomId, (existing) => {
           if (!existing) return undefined;
-          existing.players = existing.players.filter((p) => p.id !== socket.id);
+
+          existing.players = existing.players.filter(
+            (p) => p.id !== socket.id
+          );
+
           return existing.players.length ? existing : undefined;
         });
-        if (!rooms[roomId]) continue;
-        if (room) {
-          io.to(roomId).emit("score-update", room.players);
-          io.to(roomId).emit("room-update", room);
+
+        const rooms = readRooms();
+
+        if (rooms[joinedRoomId]) {
+          io.to(joinedRoomId).emit("score-update", rooms[joinedRoomId].players);
+          io.to(joinedRoomId).emit("room-update", rooms[joinedRoomId]);
+        } else if (room) {
+          io.to(joinedRoomId).emit("score-update", room.players);
+          io.to(joinedRoomId).emit("room-update", room);
         }
       }
     });
   });
 
   expressApp.all("/{*path}", (req, res) => handle(req, res));
-  server.listen(port, () => console.log(`> Ready on http://localhost:${port}`));
+
+  server.listen(port, () => {
+    console.log(`> Ready on http://localhost:${port}`);
+  });
 });
