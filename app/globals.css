@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 248 250 252;
+  --foreground: 15 23 42;
+  --muted: 100 116 139;
+  --card: 255 255 255;
+  --border: 226 232 240;
+  --primary: 15 23 42;
+  --accent: 99 102 241;
+  --accent-2: 14 165 233;
+  --success: 16 185 129;
+}
+
+.dark {
+  --background: 2 6 23;
+  --foreground: 226 232 240;
+  --muted: 148 163 184;
+  --card: 15 23 42;
+  --border: 51 65 85;
+  --primary: 255 255 255;
+  --accent: 129 140 248;
+  --accent-2: 34 211 238;
+  --success: 52 211 153;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    border-color: rgb(var(--border));
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgba(99, 102, 241, 0.12), transparent 24%),
+      radial-gradient(circle at 85% 10%, rgba(14, 165, 233, 0.12), transparent 20%),
+      radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.08), transparent 22%),
+      linear-gradient(180deg, #f8fbff 0%, #f8fafc 45%, #eef2ff 100%);
+    color: rgb(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  .dark body {
+    background:
+      radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 24%),
+      radial-gradient(circle at 85% 10%, rgba(14, 165, 233, 0.14), transparent 22%),
+      radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.12), transparent 24%),
+      linear-gradient(180deg, #020617 0%, #091225 48%, #020617 100%);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.03em;
+  }
+}
+
+@layer components {
+  .shell {
+    @apply mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-8;
+  }
+
+  .glass-panel {
+    @apply rounded-[28px] border border-white/60 bg-white/80 shadow-[0_16px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/60 dark:shadow-[0_16px_60px_rgba(2,6,23,0.45)];
+  }
+
+  .dashboard-card {
+    @apply glass-panel p-6;
+  }
+
+  .section-title {
+    @apply text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl dark:text-white;
+  }
+
+  .section-copy {
+    @apply text-sm leading-6 text-slate-500 md:text-base dark:text-slate-400;
+  }
+
+  .primary-btn {
+    @apply inline-flex items-center justify-center rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-slate-900/20 transition duration-200 hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200;
+  }
+
+  .secondary-btn {
+    @apply inline-flex items-center justify-center rounded-2xl border border-slate-200/90 bg-white/80 px-4 py-2.5 text-sm font-medium text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10;
+  }
+
+  .input-pro {
+    @apply w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_4px_rgba(99,102,241,0.08)] dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:bg-white/10;
+  }
+
+  .badge-pro {
+    @apply inline-flex items-center rounded-full border border-slate-200/90 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300;
+  }
+
+  .metric-tile {
+    @apply rounded-3xl border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-white/10 dark:bg-white/5;
+  }
+
+  .quiz-option {
+    @apply rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left text-sm font-medium text-slate-700 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10;
+  }
+}
